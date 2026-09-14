@@ -52,4 +52,19 @@ describe("flexible story timing", () => {
     });
     expect(restored.getCompletedMysteryReactionIds()).toEqual(["reaction.aether-open-sky"]);
   });
+
+  test("persists valid recall cascade beats and rejects duplicates or unknown IDs", () => {
+    const manager = new StoryManager();
+    expect(manager.completeRecallCascade("recall.thats-twice-now")).toBe(true);
+    expect(manager.completeRecallCascade("recall.thats-twice-now")).toBe(false);
+    expect(manager.completeRecallCascade("recall.not-real")).toBe(false);
+    expect(manager.getState().completedRecallCascadeIds).toEqual(["recall.thats-twice-now"]);
+
+    const restored = new StoryManager();
+    restored.loadState({
+      ...manager.getState(),
+      completedRecallCascadeIds: ["recall.thats-twice-now", "recall.not-real"],
+    });
+    expect(restored.getCompletedRecallCascadeIds()).toEqual(["recall.thats-twice-now"]);
+  });
 });

@@ -1,5 +1,5 @@
 import { LoreEntry, STORY_EVENTS, LORE_ENTRIES, StoryEvent } from "./loreFoundation";
-import { MYSTERY_REACTIONS } from "./mysteryConvergence";
+import { MYSTERY_REACTIONS, RECALL_CASCADE_BEATS } from "./mysteryConvergence";
 
 export interface StoryState {
   worldTimeSeconds: number;
@@ -7,6 +7,7 @@ export interface StoryState {
   completedEventIds: string[];
   completedRaceIds: string[];
   completedMysteryReactionIds: string[];
+  completedRecallCascadeIds: string[];
 }
 
 export class StoryManager {
@@ -16,6 +17,7 @@ export class StoryManager {
     completedEventIds: [],
     completedRaceIds: [],
     completedMysteryReactionIds: [],
+    completedRecallCascadeIds: [],
   };
 
   public getState(): StoryState {
@@ -25,6 +27,7 @@ export class StoryManager {
       completedEventIds: [...this.state.completedEventIds],
       completedRaceIds: [...this.state.completedRaceIds],
       completedMysteryReactionIds: [...this.state.completedMysteryReactionIds],
+      completedRecallCascadeIds: [...this.state.completedRecallCascadeIds],
     };
   }
 
@@ -35,6 +38,7 @@ export class StoryManager {
       completedEventIds: [...new Set(state.completedEventIds ?? [])].filter((id) => STORY_EVENTS.some((event) => event.id === id)),
       completedRaceIds: [...new Set(state.completedRaceIds ?? [])].filter((id) => id.trim().length > 0),
       completedMysteryReactionIds: [...new Set(state.completedMysteryReactionIds ?? [])].filter((id) => MYSTERY_REACTIONS.some((reaction) => reaction.id === id)),
+      completedRecallCascadeIds: [...new Set(state.completedRecallCascadeIds ?? [])].filter((id) => RECALL_CASCADE_BEATS.some((beat) => beat.id === id)),
     };
   }
 
@@ -96,6 +100,17 @@ export class StoryManager {
     if (!MYSTERY_REACTIONS.some((reaction) => reaction.id === reactionId)) return false;
     if (this.state.completedMysteryReactionIds.includes(reactionId)) return false;
     this.state.completedMysteryReactionIds.push(reactionId);
+    return true;
+  }
+
+  public getCompletedRecallCascadeIds(): string[] {
+    return [...this.state.completedRecallCascadeIds];
+  }
+
+  public completeRecallCascade(beatId: string): boolean {
+    if (!RECALL_CASCADE_BEATS.some((beat) => beat.id === beatId)) return false;
+    if (this.state.completedRecallCascadeIds.includes(beatId)) return false;
+    this.state.completedRecallCascadeIds.push(beatId);
     return true;
   }
 }

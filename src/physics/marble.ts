@@ -125,32 +125,49 @@ export class Marble {
    */
   applyGravity(deltaTime: number, slopeAngle: number = 0): void {
     if (!this.onGround) {
-      // Gravity component perpendicular to ground
-      this.velocity.y -= PHYSICS.GRAVITY * Math.cos(slopeAngle) * deltaTime;
+      // Freefall: gravity's full magnitude applies straight down. The
+      // ground's slope only matters while a surface is actually constraining
+      // the marble's motion, so it must not scale gravity while airborne.
+      this.velocity.y -= PHYSICS.GRAVITY * deltaTime;
     }
 
-    // Gravity component along slope (accelerates downhill)
+    // Gravity component along the slope surface. getSlopeAtX (the source of
+    // slopeAngle) is positive when height increases with +z, i.e. uphill in
+    // the direction of travel. Gravity's tangential component always points
+    // downhill, so it must subtract from +z velocity on an uphill grade
+    // (decelerating the climb) and add to it on a downhill grade
+    // (accelerating the descent) — the opposite of the climb/descent sign.
     if (PHYSICS.ELEVATION_GRAVITY_COMPONENT && this.onGround && Math.abs(slopeAngle) > 0.01) {
       const downslideAccel = PHYSICS.GRAVITY * Math.sin(slopeAngle);
-      this.velocity.z += downslideAccel * deltaTime;
+      this.velocity.z -= downslideAccel * deltaTime;
     }
   }
 
   /**
-   * Apply air resistance / drag
+   * Apply combined air resistance from ambient drag and wind.
+   *
+   * Aerodynamic drag depends on the marble's velocity RELATIVE to the
+   * surrounding air, not on the marble's ground-frame velocity and the
+   * wind's ground-frame velocity as two independent effects. Computing
+   * one force from (windVector - velocity) means: zero wind reduces to
+   * ordinary still-air drag opposing the marble's motion; a marble moving
+   * exactly with the wind feels no drag at all; and a marble outrunning a
+   * tailwind or fighting a headwind is decelerated by the correct relative
+   * speed rather than by the wind's absolute speed alone.
    */
-  applyAirDrag(deltaTime: number): void {
-    const airDensity = this.getAirDensityAtAltitude(this.currentAltitude);
+  applyAirResistance(deltaTime: number): void {
+    const airVelocityRelativeToMarble = this.windVector.subtract(this.velocity);
+    const relativeSpeed = airVelocityRelativeToMarble.length();
+    if (relativeSpeed <= 0.01) return;
 
-    // Drag force: F = 0.5 * ρ * v² * A * Cd
-    const speedSquared = this.velocity.length() ** 2;
-    if (speedSquared > 0.01) {
-      const dragMagnitude =
-        0.5 * airDensity * speedSquared * PHYSICS.MARBLE_CROSS_SECTION * PHYSICS.DRAG_COEFFICIENT;
-      const dragAccel = dragMagnitude / this.mass;
-      const dragDirection = this.velocity.normalize().multiply(-dragAccel * deltaTime);
-      this.velocity = this.velocity.add(dragDirection);
-    }
+    const airDensity = this.getAirDensityAtAltitude(this.currentAltitude);
+    // Drag force: F = 0.5 * ρ * v² * A * Cd, applied toward the direction
+    // the air is moving relative to the marble.
+    const dragMagnitude =
+      0.5 * airDensity * relativeSpeed ** 2 * PHYSICS.MARBLE_CROSS_SECTION * PHYSICS.DRAG_COEFFICIENT;
+    const dragAccel = dragMagnitude / this.mass;
+    const dragDirection = airVelocityRelativeToMarble.normalize().multiply(dragAccel * deltaTime);
+    this.velocity = this.velocity.add(dragDirection);
   }
 
   /**
@@ -188,24 +205,6 @@ export class Marble {
   }
 
   /**
-   * Apply wind force
-   */
-  applyWind(deltaTime: number): void {
-    const windSpeed = this.windVector.length();
-    if (windSpeed <= 0.01) return;
-
-    // Still-air drag is handled by applyAirDrag. Wind is modeled separately
-    // as a moving-air velocity so zero wind adds no second drag term.
-    const relativeWind = this.windVector;
-    const relativeSpeed = windSpeed;
-
-    const airDensity = this.getAirDensityAtAltitude(this.currentAltitude);
-    const windForce = 0.5 * airDensity * relativeSpeed ** 2 * PHYSICS.MARBLE_CROSS_SECTION * PHYSICS.DRAG_COEFFICIENT;
-    const windAcceleration = relativeWind.normalize().multiply(windForce / this.mass);
-    this.velocity = this.velocity.add(windAcceleration.multiply(deltaTime));
-  }
-
-  /**
    * Update position based on velocity
    */
   updatePosition(deltaTime: number): void {
@@ -214,23 +213,28 @@ export class Marble {
   }
 
   /**
-   * Update angular velocity based on rolling condition
-   * No-slip condition: v = ω * r
+   * Update angular velocity based on rolling condition.
+   * No-slip condition: v = ω × r_contact, where r_contact points from the
+   * marble's center straight down to the ground contact point, (0, -radius, 0).
+   * Solving for ω gives an axis perpendicular to the direction of travel —
+   * like a wheel or ball, which tumbles end-over-end — not the vertical
+   * axis. A marble rolling in +z rotates about the x-axis; one rolling in
+   * +x rotates about the z-axis. The magnitude (speed / radius) is
+   * unchanged from before, so gameplay effects that only read magnitude
+   * (getSpin, steering's gyroscopic/traction terms) are unaffected; only
+   * the axis, which matters once the marble's spin is rendered visually,
+   * is corrected.
    */
   updateAngularVelocity(): void {
-    if (this.onGround) {
-      // Rolling condition: angular velocity = linear velocity / radius
-      const horizontalVelocity = new Vector3(this.velocity.x, 0, this.velocity.z);
-      const speed = horizontalVelocity.length();
+    if (!this.onGround) return;
 
-      if (speed > 0.01) {
-        const direction = horizontalVelocity.normalize();
-        // Angular velocity magnitude based on linear speed
-        const spinMagnitude = speed / this.radius;
-        // Spin around vertical axis (y-axis)
-        this.angularVelocity = new Vector3(0, spinMagnitude, 0);
-      }
-    }
+    const horizontalVelocity = new Vector3(this.velocity.x, 0, this.velocity.z);
+    const speed = horizontalVelocity.length();
+    if (speed <= 0.01) return;
+
+    const up = new Vector3(0, 1, 0);
+    const rollingAxis = up.cross(horizontalVelocity).multiply(1 / this.radius);
+    this.angularVelocity = new Vector3(rollingAxis.x, 0, rollingAxis.z);
   }
 
   /**
@@ -286,6 +290,28 @@ export class Marble {
   }
 
   /**
+   * Apply forward drive along the track (+z axis) while throttle is held.
+   *
+   * This is the marble's actual engine/propulsion input — the only other
+   * forward-motion source is gravity's along-slope component, which
+   * cannot by itself carry a marble up sustained climbs (a free-rolling
+   * ball cannot climb a long, steep grade from momentum alone; it needs
+   * continuous drive, same as any real vehicle). Grounded only, like
+   * steering — a marble mid-air is not being driven by anything.
+   * @param throttleInput 0 (no throttle) to 1 (full throttle); values
+   *   outside that range are clamped, so a negative "brake" input is
+   *   simply treated as no thrust rather than actively reversing.
+   */
+  applyThrust(throttleInput: number, deltaTime: number): void {
+    if (!this.onGround) return;
+    const clampedThrottle = Math.max(0, Math.min(1, throttleInput));
+    if (clampedThrottle <= 0) return;
+
+    const thrustAccel = PHYSICS.THRUST_ACCELERATION * clampedThrottle;
+    this.velocity.z += thrustAccel * deltaTime;
+  }
+
+  /**
    * Main physics update
    */
   update(deltaTime: number, trackHeightAtPosition: number = 0, slopeAngle: number = 0): void {
@@ -294,16 +320,13 @@ export class Marble {
 
     // Apply forces
     this.applyGravity(deltaTime, slopeAngle);
-    this.applyAirDrag(deltaTime);
+    this.applyAirResistance(deltaTime);
     this.applyLinearDamping(deltaTime);
 
     // Only apply rolling resistance if on ground
     if (this.onGround) {
       this.applyRollingResistance(deltaTime);
     }
-
-    // Apply environmental effects
-    this.applyWind(deltaTime);
 
     // Update position
     this.updatePosition(deltaTime);

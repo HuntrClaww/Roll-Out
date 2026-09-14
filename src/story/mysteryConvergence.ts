@@ -190,6 +190,125 @@ export const getAvailableMysteryReactions = (
   });
 };
 
+export interface RecallCascadeBeat {
+  id: string;
+  title: string;
+  /** All of these bosses must be defeated for this beat to become available. */
+  requiredBossIds: string[];
+  /** The scripted callback — see reference/mystery_narrative_master_plot.md §5. */
+  script: string[];
+}
+
+/**
+ * "Recall Cascade" beats resurface earlier MYSTERY_REACTIONS lines verbatim
+ * alongside new connective narration, so the player is shown — not told —
+ * that something said early on connects to something said much later. Design
+ * source: reference/mystery_narrative_master_plot.md. Ordered earliest to
+ * latest; each requires strictly more bosses defeated than the last, so they
+ * naturally unlock in sequence across the game's five stages.
+ */
+export const RECALL_CASCADE_BEATS: RecallCascadeBeat[] = [
+  {
+    id: "recall.thats-twice-now",
+    title: "That's twice now",
+    requiredBossIds: ["boss.aether-sovereign", "boss.cinder-axis"],
+    script: [
+      "Static: Cross-referencing your last two boss debriefs.",
+      "Static: \"It looks as if it has been waiting for a racer to notice it.\"",
+      "Static: \"Movement is learned as much as it is felt.\"",
+      "Static: These are not the same sentence. I would like it noted that they are also not NOT the same sentence.",
+      "Protagonist: ...huh. Weird flex, but okay!",
+    ],
+  },
+  {
+    id: "recall.okay-hold-on",
+    title: "Okay, hold on",
+    requiredBossIds: ["boss.aether-sovereign", "boss.cinder-axis", "boss.glacier-sigil"],
+    script: [
+      "Static: Adding a third data point. \"Someone expected the ice to move.\"",
+      "Static: Someone. Expected. That is a plan. Plans have planners.",
+      "Protagonist: Wait, wait, hold on — are you saying someone's just... out there, doing this on purpose?",
+      "Static: I am saying the word \"someone\" appeared in my notes unprompted, and I do not like that it did.",
+    ],
+  },
+  {
+    id: "recall.the-crashout",
+    title: "The Crashout",
+    requiredBossIds: [
+      "boss.aether-sovereign",
+      "boss.cinder-axis",
+      "boss.glacier-sigil",
+      "boss.rift-echelon",
+      "boss.circuit-steward",
+    ],
+    script: [
+      "Static: Compiling. One: a finish line that waited to be noticed. Two: movement that is learned as much as felt. Three: someone who expected the ice to move. Four: a route that has not decided whether it failed or adapted. Five: an order beneath the confusion, authored by an unspecified party.",
+      "Protagonist: Okay but those are all just — those are just things people said. Cool moody racer things. Racers say cool moody things, that's a whole genre—",
+      "Static: I am aware. I catalogued four hundred and twelve other cool moody things this season. These five were not like the others.",
+      "Protagonist: Wait — wait a minute — no, hold on, wait—",
+      "Static: Take your time.",
+      "Protagonist: —wait, so if the finish line was WAITING, and the ice guy KNEW the ice would move, and the route guy's route DIDN'T KNOW if it was broken or just — updating — then that means — no wait, that doesn't — augh, okay, never mind, forget I—",
+      "Static: You are welcome to stop.",
+      "Protagonist: No — no, wait — OH. Oh no. OH NO. Static. Static, are we the test data.",
+      "Static: I filed a similar hypothesis under \"comedy\" four stages ago. I would like the record to show I was ahead of you.",
+      "Protagonist: That's — okay, that's — WHAT. That's — okay, I need a minute. I need to sit with \"we are technically a QA process\" for a minute. Does this mean my snack preferences aren't real.",
+      "Static: Your snack preferences are extremely real. I have logged them. Extensively. Against my will.",
+      "Protagonist: ...okay. Okay! Cool! Love that for us. Anyway — same time next race?",
+    ],
+  },
+];
+
+const validBossIdsForRecall = new Set(BOSS_BIOGRAPHIES.map((biography) => biography.bossId));
+
+/**
+ * Returns Recall Cascade beats whose required bosses are all defeated and
+ * that haven't been shown yet, earliest-eligible first (mirrors
+ * getAvailableMysteryReactions).
+ */
+export const getAvailableRecallCascadeBeats = (
+  defeatedBossIds: string[],
+  shownBeatIds: string[] = [],
+): RecallCascadeBeat[] => {
+  const defeated = new Set(defeatedBossIds.filter((id) => validBossIdsForRecall.has(id)));
+  const shown = new Set(shownBeatIds);
+  return RECALL_CASCADE_BEATS.filter((beat) => {
+    if (shown.has(beat.id)) return false;
+    return beat.requiredBossIds.every((bossId) => defeated.has(bossId));
+  });
+};
+
+export interface RecallCascadeArchiveEntry {
+  title: string;
+  body: string;
+}
+
+/** Persists shown Recall Cascade beats in the Lore Archive, same treatment as getMysteryReactionArchiveEntries. */
+export const getRecallCascadeArchiveEntries = (shownBeatIds: string[]): RecallCascadeArchiveEntry[] => {
+  const shown = new Set(shownBeatIds);
+  return RECALL_CASCADE_BEATS
+    .filter((beat) => shown.has(beat.id))
+    .map((beat) => ({ title: beat.title, body: beat.script.join("\n") }));
+};
+
+export interface MysteryReactionArchiveEntry {
+  title: string;
+  body: string;
+}
+
+/**
+ * Post-boss reactions are earned once and previously only surfaced through a
+ * transient story notice. This makes them a durable, reviewable archive
+ * entry so a player who missed or forgot the notice can still read it later.
+ */
+export const getMysteryReactionArchiveEntries = (
+  completedReactionIds: string[],
+): MysteryReactionArchiveEntry[] => {
+  const completed = new Set(completedReactionIds);
+  return MYSTERY_REACTIONS
+    .filter((reaction) => completed.has(reaction.id))
+    .map((reaction) => ({ title: reaction.title, body: reaction.line }));
+};
+
 export const getMysteryArchiveBody = (convergence: MysteryConvergence): string => {
   const threadLines = convergence.threads.map((thread) => {
     const status = thread.status.charAt(0).toUpperCase() + thread.status.slice(1);

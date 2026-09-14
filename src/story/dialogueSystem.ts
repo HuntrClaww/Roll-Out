@@ -1,8 +1,28 @@
+import { MysteryThreadId, MysteryThreadStatus } from "./mysteryConvergence";
+
 export interface DialogueScene {
   characterId: string;
   title: string;
   lines: string[];
 }
+
+/**
+ * A scene that replaces a character's base first-contact scene once a
+ * mystery thread they carry evidence for has reached at least the required
+ * status. Kept as a separate list (rather than mixed into DIALOGUE_SCENES)
+ * so the original one-scene-per-character contract and its test stay valid.
+ */
+export interface MysteryReactiveDialogueScene extends DialogueScene {
+  requiredThreadId: MysteryThreadId;
+  requiredThreadStatus: MysteryThreadStatus;
+}
+
+const THREAD_STATUS_RANK: Record<MysteryThreadStatus, number> = {
+  unseen: 0,
+  hinted: 1,
+  supported: 2,
+  converging: 3,
+};
 
 export const DIALOGUE_SCENES: DialogueScene[] = [
   {
@@ -203,7 +223,158 @@ export const DIALOGUE_SCENES: DialogueScene[] = [
       "Ghost Lap: I am sure this time will be different. I have been sure many times.",
     ],
   },
+  {
+    characterId: "knight_ember",
+    title: "Knight Ember blocks the heat gate",
+    lines: [
+      "Knight Ember: Cinder Axis sent standard gear and a standard warning. I plan to ignore the second part.",
+      "Knight Ember: He rebuilds his shell after every failure. I intend to have fewer of those to rebuild from.",
+      "Knight Ember: Beat me first. Then go bother someone patient.",
+    ],
+  },
+  {
+    characterId: "knight_glacier",
+    title: "Knight Glacier holds the marked line",
+    lines: [
+      "Knight Glacier: I follow the pattern Glacier Sigil reads. I do not claim to read it myself.",
+      "Knight Glacier: That honesty has kept me upright on ice that has swallowed more confident racers.",
+      "Knight Glacier: Stay on the marked line. It was drawn by someone who is rarely wrong.",
+    ],
+  },
+  {
+    characterId: "knight_tide",
+    title: "Knight Tide guards the ward line",
+    lines: [
+      "Knight Tide: Salt Ward keeps to itself. We are not part of the five gates, and we prefer it that way.",
+      "Knight Tide: Someone has to hold a line that isn't being watched by anyone important.",
+      "Knight Tide: Pass if you can. I will not make it easy, and I will not explain why we're here.",
+    ],
+  },
+  {
+    characterId: "knight_rift",
+    title: "Knight Rift insists on proper technique",
+    lines: [
+      "Knight Rift: Rift Echelon does this the reckless way. I do this the CORRECT way. There is a difference.",
+      "Knight Rift: Approved conditions. Controlled seams. A logged report afterward. That's all I ask.",
+      "Knight Rift: ...why is the seam doing that. That is not an approved condition. Hold on—",
+    ],
+  },
+  {
+    characterId: "npc.tally-nine",
+    title: "Tally Nine reports an odd number",
+    lines: [
+      "Tally Nine: You have arrived nine times.",
+      "Tally Nine: This is the first time we have met.",
+      "Tally Nine: I do not enjoy that sentence either, but the count is the count.",
+    ],
+  },
+  {
+    characterId: "npc.mirror-mara",
+    title: "Mirror Mara offers a second opinion",
+    lines: [
+      "Mirror Mara: Would you like advice from you, or from the version of you that nearly won?",
+      "Mirror Mara: They disagree more often than you would expect.",
+      "Mirror Mara: I only relay what the reflection says. I do not referee it.",
+    ],
+  },
 ];
 
-export const getDialogueScene = (characterId: string): DialogueScene | undefined =>
-  DIALOGUE_SCENES.find((scene) => scene.characterId === characterId);
+/**
+ * Each entry pairs an evidence-bearing character with the single thread
+ * their storyUse most directly serves. Creator-intent gets two characters
+ * (Marble Archivist, then Vaultkeeper Io at a later tier) since both are
+ * guide-role characters dealing with creator-era material, giving that
+ * thread a sense of escalation across two separate conversations.
+ */
+export const MYSTERY_REACTIVE_DIALOGUE_SCENES: MysteryReactiveDialogueScene[] = [
+  {
+    characterId: "npc.quiet-ell",
+    title: "Quiet Ell revises a theory",
+    lines: [
+      "Quiet Ell: I no longer think the sound arrives early.",
+      "Quiet Ell: I think the moving happens before the mover decides to move.",
+      "Quiet Ell: I am still not worried. I have simply moved my worry earlier as well.",
+    ],
+    requiredThreadId: "movement-impulse",
+    requiredThreadStatus: "supported",
+  },
+  {
+    characterId: "npc.tally-nine",
+    title: "Tally Nine updates the count",
+    lines: [
+      "Tally Nine: The finish line you crossed today matches a total I already recorded.",
+      "Tally Nine: I recorded it before you crossed it.",
+      "Tally Nine: I am not saying the line is dishonest. I am saying my ledger disagrees with the calendar.",
+    ],
+    requiredThreadId: "finish-line-network",
+    requiredThreadStatus: "supported",
+  },
+  {
+    characterId: "npc.marble-archivist",
+    title: "The Archivist finds a second draft",
+    lines: [
+      "Marble Archivist: This is the same route, drawn twice, by the same hand, disagreeing with itself.",
+      "Marble Archivist: One draft is careless. The other is careful. Careless work is rarely filed this neatly.",
+      "Marble Archivist: I believe someone intended to finish this. I no longer believe they were rushed.",
+    ],
+    requiredThreadId: "creator-intent",
+    requiredThreadStatus: "supported",
+  },
+  {
+    characterId: "npc.mirror-mara",
+    title: "Mirror Mara compares three reflections",
+    lines: [
+      "Mirror Mara: This route no longer matches its own reflection from your last attempt.",
+      "Mirror Mara: That could mean it failed. It could mean it adjusted. Reflections rarely explain their own reasoning.",
+      "Mirror Mara: I will keep comparing. Please keep giving me new attempts to compare.",
+    ],
+    requiredThreadId: "route-instability",
+    requiredThreadStatus: "supported",
+  },
+  {
+    characterId: "npc.nettle-judge",
+    title: "Nettle Judge reviews conflicting reports",
+    lines: [
+      "Nettle Judge: Two factions filed two honest reports about the same route, and they do not agree.",
+      "Nettle Judge: Ordinarily one report would be wrong. I can no longer assume that here.",
+      "Nettle Judge: I am filing both as accurate. The paperwork will simply have to be uncomfortable about it.",
+    ],
+    requiredThreadId: "world-disagreement",
+    requiredThreadStatus: "supported",
+  },
+  {
+    characterId: "npc.vaultkeeper-io",
+    title: "Vaultkeeper Io reconsiders provenance",
+    lines: [
+      "Vaultkeeper Io: I have checked this component's provenance six times. Six times, it does not finish checking.",
+      "Vaultkeeper Io: An unfinished object is not unusual. An object that resists being finished is.",
+      "Vaultkeeper Io: I will still lend it to you. I would simply like it back exactly as it left.",
+    ],
+    requiredThreadId: "creator-intent",
+    requiredThreadStatus: "converging",
+  },
+];
+
+/**
+ * Returns a character's dialogue scene. When threadStatuses is omitted, this
+ * behaves exactly as before (the character's base scene). When provided, an
+ * evidence-bearing character whose relevant thread has reached the required
+ * status will show their reactive scene instead, preferring the most
+ * advanced eligible reaction if more than one qualifies.
+ */
+export const getDialogueScene = (
+  characterId: string,
+  threadStatuses?: Partial<Record<MysteryThreadId, MysteryThreadStatus>>,
+): DialogueScene | undefined => {
+  if (threadStatuses) {
+    const eligibleReactions = MYSTERY_REACTIVE_DIALOGUE_SCENES
+      .filter((scene) => scene.characterId === characterId)
+      .filter((scene) => {
+        const currentStatus = threadStatuses[scene.requiredThreadId] ?? "unseen";
+        return THREAD_STATUS_RANK[currentStatus] >= THREAD_STATUS_RANK[scene.requiredThreadStatus];
+      })
+      .sort((a, b) => THREAD_STATUS_RANK[b.requiredThreadStatus] - THREAD_STATUS_RANK[a.requiredThreadStatus]);
+    if (eligibleReactions.length > 0) return eligibleReactions[0];
+  }
+  return DIALOGUE_SCENES.find((scene) => scene.characterId === characterId);
+};

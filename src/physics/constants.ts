@@ -9,6 +9,17 @@
 export const PHYSICS = {
   // World
   GRAVITY: 9.81,                       // m/s² (downward)
+
+  // Forward drive acceleration while the player (or AI) holds throttle.
+  // The steepest track-starting grade in the game is ~45°, whose along-
+  // slope deceleration is g*sin(45°) ≈ 6.94 m/s² — this must exceed that
+  // just to hold position on the steepest climb, with margin left over to
+  // actually accelerate uphill. This was previously provided ONLY by a
+  // sign bug in the slope-gravity formula (see marble.ts applyGravity);
+  // now that gravity is correct, thrust is the real, intentional forward-
+  // motion source. First-pass value — expected to be tuned during the
+  // deferred Phase 19 playtest, not before.
+  THRUST_ACCELERATION: 12,             // m/s²
   GROUND_LEVEL: 0,                     // reference height for collisions
   AIR_DENSITY_SEA_LEVEL: 1.225,        // kg/m³ (sea level air density)
   SCALE_HEIGHT: 8500,                  // m (atmosphere scale height)

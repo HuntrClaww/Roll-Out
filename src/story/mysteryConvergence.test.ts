@@ -1,4 +1,12 @@
-import { evaluateMysteryConvergence, getAvailableMysteryReactions, getMysteryArchiveBody, MYSTERY_THREADS } from "./mysteryConvergence";
+import {
+  evaluateMysteryConvergence,
+  getAvailableMysteryReactions,
+  getMysteryArchiveBody,
+  getMysteryReactionArchiveEntries,
+  getAvailableRecallCascadeBeats,
+  getRecallCascadeArchiveEntries,
+  MYSTERY_THREADS,
+} from "./mysteryConvergence";
 
 describe("mystery convergence", () => {
   test("starts with unanswered threads and no fabricated evidence", () => {
@@ -62,5 +70,74 @@ describe("mystery convergence", () => {
     }));
     expect(body).toContain("The Finish-Line Network — Hinted");
     expect(body).toContain("The pattern is incomplete");
+  });
+
+  test("keeps a seen post-boss reaction available as a durable archive entry", () => {
+    expect(getMysteryReactionArchiveEntries([])).toHaveLength(0);
+
+    const entries = getMysteryReactionArchiveEntries(["reaction.aether-open-sky", "reaction.not-real"]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toEqual({
+      title: "A route the sky remembers",
+      body: "The next finish line does not look nearer. It looks as if it has been waiting for a racer to notice it.",
+    });
+  });
+
+  test("returns reaction archive entries in a stable, declared order", () => {
+    const allReactionIds = [
+      "reaction.circuit-order",
+      "reaction.aether-open-sky",
+      "reaction.rift-double-answer",
+    ];
+    const entries = getMysteryReactionArchiveEntries(allReactionIds);
+    expect(entries.map((entry) => entry.title)).toEqual([
+      "A route the sky remembers",
+      "Two routes, one arrival",
+      "The schedule underneath",
+    ]);
+  });
+});
+
+describe("recall cascade", () => {
+  test("no beats are available before any bosses are defeated", () => {
+    expect(getAvailableRecallCascadeBeats([])).toHaveLength(0);
+  });
+
+  test("the first beat unlocks once its two required bosses are both defeated, not before", () => {
+    expect(getAvailableRecallCascadeBeats(["boss.aether-sovereign"])).toHaveLength(0);
+    const available = getAvailableRecallCascadeBeats(["boss.aether-sovereign", "boss.cinder-axis"]);
+    expect(available.map((beat) => beat.id)).toContain("recall.thats-twice-now");
+  });
+
+  test("the final crashout beat requires all five bosses defeated", () => {
+    const fourDefeated = getAvailableRecallCascadeBeats([
+      "boss.aether-sovereign",
+      "boss.cinder-axis",
+      "boss.glacier-sigil",
+      "boss.rift-echelon",
+    ]);
+    expect(fourDefeated.some((beat) => beat.id === "recall.the-crashout")).toBe(false);
+
+    const allFive = getAvailableRecallCascadeBeats([
+      "boss.aether-sovereign",
+      "boss.cinder-axis",
+      "boss.glacier-sigil",
+      "boss.rift-echelon",
+      "boss.circuit-steward",
+    ]);
+    expect(allFive.some((beat) => beat.id === "recall.the-crashout")).toBe(true);
+  });
+
+  test("already-shown beats are excluded from availability", () => {
+    const defeated = ["boss.aether-sovereign", "boss.cinder-axis"];
+    expect(getAvailableRecallCascadeBeats(defeated, ["recall.thats-twice-now"])).toHaveLength(0);
+  });
+
+  test("archive entries persist shown beats with their full script", () => {
+    expect(getRecallCascadeArchiveEntries([])).toHaveLength(0);
+    const entries = getRecallCascadeArchiveEntries(["recall.thats-twice-now"]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].title).toBe("That's twice now");
+    expect(entries[0].body).toContain("Weird flex, but okay!");
   });
 });

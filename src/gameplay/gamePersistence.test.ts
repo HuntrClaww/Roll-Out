@@ -4,7 +4,7 @@ const sampleSave = (): GameSaveData => ({
   schemaVersion: 1,
   savedAtIso: "2026-09-08T00:00:00.000Z",
   progression: { currentStageIndex: 1, unlockedStageIndex: 1, bestClearRank: 1, totalWins: 2, totalLosses: 1 },
-  story: { worldTimeSeconds: 42, discoveredLoreIds: [], completedEventIds: [], completedRaceIds: [], completedMysteryReactionIds: [] },
+  story: { worldTimeSeconds: 42, discoveredLoreIds: [], completedEventIds: [], completedRaceIds: [], completedMysteryReactionIds: [], completedRecallCascadeIds: [] },
   world: { visitedRegions: ["volcanic-basin"], completedStages: ["intro-gate"], factionStates: [] },
   team: { player: { id: "character.protagonist", name: "The Main Character", role: "protagonist", personalityNotes: [] }, memberIds: [], activeMemberId: null },
   relationships: [],

@@ -95,6 +95,7 @@ const sanitizeStory = (value: Record<string, unknown>): StoryState => ({
   completedEventIds: stringArray(value.completedEventIds),
   completedRaceIds: stringArray(value.completedRaceIds),
   completedMysteryReactionIds: stringArray(value.completedMysteryReactionIds),
+  completedRecallCascadeIds: stringArray(value.completedRecallCascadeIds),
 });
 
 const sanitizeWorld = (value: Record<string, unknown>): WorldStateSnapshot => ({

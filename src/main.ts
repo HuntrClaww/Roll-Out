@@ -25,7 +25,16 @@ import { UpgradeInventoryManager } from "./gameplay/upgradeEconomy";
 import { GameSaveData, loadFromStorage, saveToStorage } from "./gameplay/gamePersistence";
 import { NpcServiceManager } from "./story/npcServices";
 import { RacingStyleManager } from "./story/racingStyleSystem";
-import { evaluateMysteryConvergence, getAvailableMysteryReactions, getMysteryArchiveBody } from "./story/mysteryConvergence";
+import {
+  evaluateMysteryConvergence,
+  getAvailableMysteryReactions,
+  getMysteryArchiveBody,
+  getMysteryReactionArchiveEntries,
+  getAvailableRecallCascadeBeats,
+  getRecallCascadeArchiveEntries,
+  MysteryThreadId,
+  MysteryThreadStatus,
+} from "./story/mysteryConvergence";
 
 class Game {
   private marble: Marble;
@@ -38,6 +47,7 @@ class Game {
   private lastFrameTime: number = 0;
   private raceTime: number = 0;
   private steerInput: number = 0;
+  private throttleInput: number = 0;
   private showDebugUI: boolean = true;
   private readonly starterObstacle: TrackObstacle = createStarterObstacle();
   private gripUpgradeEnabled: boolean = false;
@@ -127,26 +137,30 @@ class Game {
   }
 
   private setupInput(): void {
-    // Touch steering. Keep the gesture bounded and always release steering when
-    // the finger leaves the screen or the browser loses focus.
+    // Touch drives forward while held, and steers by horizontal position.
+    // Keep the gesture bounded and always release both when the finger
+    // leaves the screen or the browser loses focus.
     document.addEventListener("touchmove", (e) => {
       if (e.touches.length === 0) return;
       e.preventDefault();
       const touch = e.touches[0];
       const centerX = this.canvas.width / 2;
       this.steerInput = ((touch.clientX - centerX) / (this.canvas.width / 2)) * 0.5;
+      this.throttleInput = 1;
     }, { passive: false });
-    const releaseTouchSteering = (): void => {
+    const releaseTouchInput = (): void => {
       this.steerInput = 0;
+      this.throttleInput = 0;
     };
-    document.addEventListener("touchend", releaseTouchSteering, { passive: true });
-    document.addEventListener("touchcancel", releaseTouchSteering, { passive: true });
-    window.addEventListener("blur", releaseTouchSteering);
+    document.addEventListener("touchend", releaseTouchInput, { passive: true });
+    document.addEventListener("touchcancel", releaseTouchInput, { passive: true });
+    window.addEventListener("blur", releaseTouchInput);
 
     // Keyboard steering (for testing)
     document.addEventListener("keydown", (e) => {
       if (!this.lorePanelOpen && e.key === "ArrowLeft") this.steerInput = -0.5;
       if (!this.lorePanelOpen && e.key === "ArrowRight") this.steerInput = 0.5;
+      if (!this.lorePanelOpen && e.key === "ArrowUp") this.throttleInput = 1;
       if (e.key === "d") this.showDebugUI = !this.showDebugUI; // Toggle debug UI
       if (e.key.toLowerCase() === "g") {
         const installedUpgrade = this.upgradeInventory.getInstalledUpgrade("reinforced-grip");
@@ -237,7 +251,7 @@ class Game {
           Object.fromEntries(world.factionStates.map((state) => [state.id, state.standing])),
         );
         if (available.length > 0) {
-          this.dialogueScene = getDialogueScene(available[0].id) ?? null;
+          this.dialogueScene = getDialogueScene(available[0].id, this.getMysteryThreadStatusMap()) ?? null;
           this.dialogueLineIndex = 0;
           this.characterRelationshipManager.recordInteraction(available[0].id, this.storyManager.getState().worldTimeSeconds);
           this.storyNotice = this.dialogueScene ? "Dialogue opened. Press Enter or Space to continue." : `Encounter found: ${available[0].name}`;
@@ -288,6 +302,7 @@ class Game {
 
     document.addEventListener("keyup", () => {
       this.steerInput = 0;
+      this.throttleInput = 0;
     });
   }
 
@@ -321,6 +336,7 @@ class Game {
 
     // Update player marble
     this.marble.applySteeringForce(this.steerInput, deltaTime);
+    this.marble.applyThrust(this.throttleInput, deltaTime);
     this.marble.update(
       deltaTime,
       playerEnv.elevation,
@@ -347,6 +363,7 @@ class Game {
       threatLevel: this.activeEncounter.boss.difficulty,
     });
     this.opponentMarble.applySteeringForce(opponentDecision.steeringBias, deltaTime);
+    this.opponentMarble.applyThrust(opponentDecision.accelerationBias, deltaTime);
     this.opponentMarble.update(
       deltaTime,
       opponentEnv.elevation,
@@ -410,6 +427,13 @@ class Game {
             .find((candidate) => candidate.requiredBossId === bossCharacterId);
           if (reaction && this.storyManager.completeMysteryReaction(reaction.id)) {
             this.storyNotice += ` ${reaction.title}: ${reaction.line}`;
+          }
+          const recallBeat = getAvailableRecallCascadeBeats(
+            mysterySnapshot.defeatedBossIds,
+            this.storyManager.getCompletedRecallCascadeIds(),
+          )[0];
+          if (recallBeat && this.storyManager.completeRecallCascade(recallBeat.id)) {
+            this.storyNotice += ` [Recall: ${recallBeat.title}] ${recallBeat.script.join(" ")}`;
           }
         }
       }
@@ -638,6 +662,11 @@ class Game {
       title: "Mystery Convergence",
       body: getMysteryArchiveBody(mystery),
     };
+    // Post-boss reactions previously only appeared once as a transient story
+    // notice. Keeping them here means a player who missed or forgot one can
+    // still revisit it, without turning them into full StoryManager events.
+    const reactionEntries = getMysteryReactionArchiveEntries(this.storyManager.getCompletedMysteryReactionIds());
+    const recallEntries = getRecallCascadeArchiveEntries(this.storyManager.getCompletedRecallCascadeIds());
     const loreEntries = this.storyManager.getDiscoveredLore().map((entry: LoreEntry) => ({
       title: entry.title,
       body: `${entry.summary}\n\nDelivery: ${entry.delivery}`,
@@ -646,11 +675,16 @@ class Game {
       title: entry.title,
       body: `${entry.abilityExplanation}\n\n${entry.biography}`,
     }));
-    return [convergenceEntry, ...loreEntries, ...biographies];
+    return [convergenceEntry, ...reactionEntries, ...recallEntries, ...loreEntries, ...biographies];
   }
 
   private getMysteryConvergence() {
     return evaluateMysteryConvergence(this.getMysteryProgressSnapshot());
+  }
+
+  private getMysteryThreadStatusMap(): Partial<Record<MysteryThreadId, MysteryThreadStatus>> {
+    const convergence = this.getMysteryConvergence();
+    return Object.fromEntries(convergence.threads.map((thread) => [thread.id, thread.status]));
   }
 
   private getMysteryProgressSnapshot() {

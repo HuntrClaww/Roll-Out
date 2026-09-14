@@ -15,7 +15,12 @@ export class OpponentManager {
     bossName: string = DEFAULT_STAGE_ROSTER.bosses[0].name,
     faction?: string,
   ): StageEncounter {
-    const boss = structuredClone(DEFAULT_STAGE_ROSTER.bosses[0]);
+    // Select the boss profile whose stats/terrain affinity/ability actually
+    // match this boss's established identity, falling back to the first
+    // roster entry only if the name isn't recognized (keeps this safe for
+    // any caller passing an arbitrary/custom boss name).
+    const matchedBoss = DEFAULT_STAGE_ROSTER.bosses.find((candidate) => candidate.name === bossName);
+    const boss = structuredClone(matchedBoss ?? DEFAULT_STAGE_ROSTER.bosses[0]);
     boss.name = bossName;
     boss.id = `boss_${stageId}`;
     if (faction) boss.faction = faction;
