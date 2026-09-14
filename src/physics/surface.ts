@@ -1,6 +1,22 @@
 /**
- * Surface System - Defines track surface properties
+ * Surface System - Visual/display properties for track surfaces
+ * (name, color, particle effect), keyed to line up with the physics
+ * surface keys in `constants.ts`.
+ *
+ * Friction and rolling resistance are NOT redefined here — they are
+ * pulled live from `PHYSICS.SURFACES` in constants.ts, which is the
+ * single physics source of truth (it's what Marble.applyRollingResistance
+ * and Marble.applySteeringForce actually read at runtime). Previously
+ * this file kept its own hand-copied friction/rollingResistance numbers,
+ * which could silently drift out of sync with the real physics values
+ * over time since nothing enforced they stay equal. Deriving them here
+ * instead makes that class of drift structurally impossible: if
+ * constants.ts changes a surface's friction, this file's numbers update
+ * automatically. Surfaces below that have no physics entry in
+ * constants.ts (gravel, rock, metal — visual-only for now, not yet
+ * selectable as an actual race surface) keep their own defined values.
  */
+import { PHYSICS } from "./constants";
 
 export interface SurfaceData {
   name: string;
@@ -10,75 +26,83 @@ export interface SurfaceData {
   visualEffect?: string;
 }
 
+type PhysicsSurfaceKey = keyof typeof PHYSICS.SURFACES;
+
+/** Pull friction/rollingResistance from constants.ts when the key exists there. */
+function physicsValuesFor(
+  key: PhysicsSurfaceKey | null,
+  fallbackFriction: number,
+  fallbackRollingResistance: number
+): { friction: number; rollingResistance: number } {
+  if (key && PHYSICS.SURFACES[key]) {
+    const p = PHYSICS.SURFACES[key];
+    return { friction: p.friction, rollingResistance: p.rollingResistance };
+  }
+  return { friction: fallbackFriction, rollingResistance: fallbackRollingResistance };
+}
+
 export class Surface {
   static readonly SURFACES: { [key: string]: SurfaceData } = {
     asphalt: {
       name: "Asphalt",
-      friction: 1.2,
-      rollingResistance: 0.003,
+      ...physicsValuesFor("asphalt", 1.2, 0.003),
       color: "#444444",
       visualEffect: "dust",
     },
     gravel: {
       name: "Gravel",
-      friction: 1.0,
-      rollingResistance: 0.006,
+      // Not yet in PHYSICS.SURFACES — visual-only surface type, own values.
+      ...physicsValuesFor(null, 1.0, 0.006),
       color: "#9E8B63",
       visualEffect: "grit_spray",
     },
     dirt: {
       name: "Dirt",
-      friction: 0.9,
-      rollingResistance: 0.008,
+      ...physicsValuesFor("dirt", 0.9, 0.008),
       color: "#8B4513",
       visualEffect: "dirt_spray",
     },
     rock: {
       name: "Rock",
-      friction: 1.1,
-      rollingResistance: 0.005,
+      // Not yet in PHYSICS.SURFACES — visual-only surface type, own values.
+      ...physicsValuesFor(null, 1.1, 0.005),
       color: "#7A7A7A",
       visualEffect: "grit_spray",
     },
     ice: {
       name: "Ice",
-      friction: 0.3,
-      rollingResistance: 0.001,
+      ...physicsValuesFor("ice", 0.3, 0.001),
       color: "#E0F6FF",
       visualEffect: "ice_crack",
     },
     sand: {
       name: "Sand",
-      friction: 0.6,
-      rollingResistance: 0.015,
+      ...physicsValuesFor("sand", 0.6, 0.015),
       color: "#FFFACD",
       visualEffect: "sand_spray",
     },
     grass: {
       name: "Grass",
-      friction: 0.8,
-      rollingResistance: 0.01,
+      ...physicsValuesFor("grass", 0.8, 0.01),
       color: "#228B22",
       visualEffect: "grass_kick",
     },
     volcanic_rock: {
       name: "Volcanic Rock",
-      friction: 0.8,
-      rollingResistance: 0.008,
+      ...physicsValuesFor("volcanic_rock", 0.8, 0.008),
       color: "#9B4E1D",
       visualEffect: "ash_haze",
     },
     obsidian: {
       name: "Obsidian",
-      friction: 0.25,
-      rollingResistance: 0.0005,
+      ...physicsValuesFor("obsidian", 0.25, 0.0005),
       color: "#1B1B1B",
       visualEffect: "glass_sheen",
     },
     metal: {
       name: "Metal",
-      friction: 1.5,
-      rollingResistance: 0.002,
+      // Not yet in PHYSICS.SURFACES — visual-only surface type, own values.
+      ...physicsValuesFor(null, 1.5, 0.002),
       color: "#C0C0C0",
       visualEffect: "sparks",
     },

@@ -5,6 +5,7 @@
  */
 
 import { Marble, Vector3 } from "./physics/marble";
+import { Surface } from "./physics/surface";
 import { Track, createTrack } from "./gameplay/track";
 import { OpponentManager } from "./gameplay/opponentManager";
 import { HybridOpponentAI } from "./gameplay/opponentAI";
@@ -891,6 +892,16 @@ class Game {
   }
 
   private getSurfaceColor(surface: string): string {
+    // Surface.SURFACES (physics/surface.ts) is the complete, single source
+    // of truth for per-surface display color — it covers every surface
+    // in the game (previously this switch only covered 6 of the 10 and
+    // had drifted from those colors' real definitions; sand/grass/dirt/
+    // metal fell through to a flat generic gray with no visual identity
+    // at all). The old case values are kept below as the fallback for any
+    // surface key that genuinely isn't registered anywhere.
+    const known = Surface.getSurface(surface);
+    if (known) return known.color;
+
     switch (surface) {
       case "asphalt": return "#505050";
       case "gravel": return "#D3D3D3";

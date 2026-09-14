@@ -260,9 +260,17 @@ export class Marble {
     const surfaceData = PHYSICS.SURFACES[this.currentSurface as keyof typeof PHYSICS.SURFACES];
     if (!surfaceData) return;
 
-    // Temperature-adjusted friction
+    // Temperature-adjusted friction. Clamped to non-negative to match the
+    // same defensive pattern applyRollingResistance already uses just
+    // below in this file — without it, a temperature far enough below a
+    // surface's base temperature could drive tempFactor negative and
+    // invert steering (steering left would push the marble right).
+    // Unreachable with today's game content (coldest configured
+    // temperature is -8°C on ice, base -10°C — nowhere close), but the
+    // formula itself should be safe for whatever temperature future
+    // stages introduce, the same way its sibling already is.
     const tempDelta = this.currentTemperature - surfaceData.temperature;
-    const tempFactor = 1 + (surfaceData.temperatureCoefficient * tempDelta);
+    const tempFactor = Math.max(0, 1 + (surfaceData.temperatureCoefficient * tempDelta));
     const adjustedFriction = surfaceData.friction * tempFactor * this.gripModifier;
 
     // Base steering force

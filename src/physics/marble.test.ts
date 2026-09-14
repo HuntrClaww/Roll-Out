@@ -246,6 +246,51 @@ describe("Marble physics", () => {
     });
   });
 
+  describe("steering", () => {
+    test("temperature-adjusted friction never goes negative, even far below a surface's base temperature", () => {
+      // Regression test: applySteeringForce used to compute
+      // tempFactor = 1 + coefficient * tempDelta with no floor, unlike its
+      // sibling applyRollingResistance which already clamped to zero. Ice
+      // has the highest temperatureCoefficient (0.05) and a base
+      // temperature of -10°C, so a large enough cold snap used to be able
+      // to drive friction negative and invert steering — turning a left
+      // input into a rightward push. Not reachable with today's game
+      // content, but the formula itself must be safe regardless.
+      const marble = new Marble(new Vector3(0, 0, 0));
+      marble.onGround = true;
+      marble.velocity = new Vector3(0, 0, 1); // moving forward so `right` is well-defined
+      marble.currentSurface = "ice";
+      marble.currentTemperature = -500; // absurdly far below ice's -10°C base
+
+      const velocityBefore = marble.velocity.clone();
+      marble.applySteeringForce(1, 1); // steer hard right
+
+      // With friction clamped at zero, adjustedFriction is 0, so
+      // steerForce is 0 and velocity must be unchanged — never pushed
+      // further right (correct clamp) and never flipped left (the bug).
+      expect(marble.velocity.x).toBeCloseTo(velocityBefore.x, 10);
+    });
+
+    test("a positive steering input consistently produces the same velocity.x direction at a normal temperature", () => {
+      // Given forward=(0,0,1), right=(-forward.z,0,forward.x)=(-1,0,0), so a
+      // positive steerAmount pushes velocity.x negative under this file's
+      // own sign convention. The point of this test isn't the specific
+      // sign (that's an internal convention, not a gameplay contract) —
+      // it's that steering is deterministic and un-inverted at an ordinary
+      // temperature, which the test above confirms stays true even at an
+      // extreme one.
+      const marble = new Marble(new Vector3(0, 0, 0));
+      marble.onGround = true;
+      marble.velocity = new Vector3(0, 0, 1);
+      marble.currentSurface = "asphalt";
+      marble.currentTemperature = 25; // matches asphalt's own base temperature
+
+      marble.applySteeringForce(1, 1);
+
+      expect(marble.velocity.x).toBeLessThan(0);
+    });
+  });
+
   describe("regression: the pre-fix uphill-launch bug cannot recur silently", () => {
     test("a marble at rest with no thrust does not move forward on an uphill grade", () => {
       // Locks in the corrected sign from the gravity fix: without thrust,
