@@ -13,8 +13,8 @@
  * instead makes that class of drift structurally impossible: if
  * constants.ts changes a surface's friction, this file's numbers update
  * automatically. Surfaces below that have no physics entry in
- * constants.ts (gravel, rock, metal — visual-only for now, not yet
- * selectable as an actual race surface) keep their own defined values.
+ * constants.ts (metal — visual-only for now, not yet selectable as an
+ * actual race surface) keep their own defined values.
  */
 import { PHYSICS } from "./constants";
 
@@ -51,8 +51,7 @@ export class Surface {
     },
     gravel: {
       name: "Gravel",
-      // Not yet in PHYSICS.SURFACES — visual-only surface type, own values.
-      ...physicsValuesFor(null, 1.0, 0.006),
+      ...physicsValuesFor("gravel", 1.0, 0.006),
       color: "#9E8B63",
       visualEffect: "grit_spray",
     },
@@ -64,8 +63,7 @@ export class Surface {
     },
     rock: {
       name: "Rock",
-      // Not yet in PHYSICS.SURFACES — visual-only surface type, own values.
-      ...physicsValuesFor(null, 1.1, 0.005),
+      ...physicsValuesFor("rock", 1.1, 0.005),
       color: "#7A7A7A",
       visualEffect: "grit_spray",
     },

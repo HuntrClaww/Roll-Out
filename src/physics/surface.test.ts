@@ -28,16 +28,26 @@ describe("Surface", () => {
       }
     });
 
-    it("includes surfaces used by track rendering that are not yet physics-backed", () => {
-      // gravel/rock/metal are visual-only today (no PHYSICS.SURFACES entry) —
-      // this documents that intentionally, so a future physics addition for
-      // them is a deliberate choice rather than an accidental gap.
-      expect(Surface.getSurface("gravel")).toBeDefined();
-      expect(Surface.getSurface("rock")).toBeDefined();
+    it("includes metal, a surface used by track rendering that is not yet physics-backed", () => {
+      // metal is visual-only today (no PHYSICS.SURFACES entry) — this
+      // documents that intentionally, so a future physics addition for
+      // it is a deliberate choice rather than an accidental gap. gravel
+      // and rock used to be in the same boat but are now real physics
+      // surfaces (see the regression test below).
       expect(Surface.getSurface("metal")).toBeDefined();
-      expect(PHYSICS.SURFACES).not.toHaveProperty("gravel");
-      expect(PHYSICS.SURFACES).not.toHaveProperty("rock");
       expect(PHYSICS.SURFACES).not.toHaveProperty("metal");
+    });
+
+    it("regression: gravel and rock are real physics surfaces, not silently no-op ones", () => {
+      // These were the actual bug: track.ts already used "gravel" and
+      // "rock" as the `surface` for real regions (Mountain Pass Base
+      // Camp/Alpine Meadow, Volcanic Basin Cooling Basin), but neither
+      // existed in PHYSICS.SURFACES. Marble.applyRollingResistance and
+      // Marble.applySteeringForce both return immediately when the
+      // surface lookup misses — so on those regions the player had zero
+      // steering control and no rolling resistance, silently.
+      expect(PHYSICS.SURFACES).toHaveProperty("gravel");
+      expect(PHYSICS.SURFACES).toHaveProperty("rock");
     });
   });
 

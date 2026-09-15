@@ -77,6 +77,31 @@ export const PHYSICS = {
       temperature: 20,
       temperatureCoefficient: 0.015,
     },
+    // gravel and rock: previously only existed as visual-only entries in
+    // surface.ts (color/particle effect), with no PHYSICS.SURFACES entry
+    // at all — but track.ts already used both as the actual `surface` for
+    // real regions (Mountain Pass "Base Camp"/"Alpine Meadow", Volcanic
+    // Basin "Cooling Basin"). Both applyRollingResistance and
+    // applySteeringForce in marble.ts look up PHYSICS.SURFACES[surface]
+    // and return immediately if it's missing — so on those regions the
+    // marble got no rolling resistance AND the player had zero steering
+    // control at all, silently, with no error. Values below match what
+    // surface.ts already had for these (so nothing about intended feel
+    // changes), with temperature/coefficient set in line with their
+    // closest sibling surfaces: gravel behaves like a coarser dirt,
+    // rock like a cooler, more thermally stable stone surface.
+    gravel: {
+      friction: 1.0,
+      rollingResistance: 0.006,
+      temperature: 18,
+      temperatureCoefficient: 0.015,
+    },
+    rock: {
+      friction: 1.1,
+      rollingResistance: 0.005,
+      temperature: 12,
+      temperatureCoefficient: 0.012,
+    },
     ice: {
       friction: 0.3,
       rollingResistance: 0.001,

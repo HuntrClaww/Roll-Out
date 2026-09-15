@@ -289,6 +289,24 @@ describe("Marble physics", () => {
 
       expect(marble.velocity.x).toBeLessThan(0);
     });
+    test("regression: gravel and rock surfaces actually respond to steering input", () => {
+      // Both surfaces were used by real track regions (see track.ts) but
+      // had no PHYSICS.SURFACES entry at all, so applySteeringForce's
+      // surface lookup missed and the method returned immediately —
+      // meaning steering silently did nothing on those regions.
+      for (const surface of ["gravel", "rock"]) {
+        const marble = new Marble(new Vector3(0, 0, 0));
+        marble.onGround = true;
+        marble.velocity = new Vector3(0, 0, 1);
+        marble.currentSurface = surface;
+        marble.currentTemperature = 15;
+
+        const before = marble.velocity.x;
+        marble.applySteeringForce(1, 1);
+
+        expect(marble.velocity.x).not.toBe(before);
+      }
+    });
   });
 
   describe("regression: the pre-fix uphill-launch bug cannot recur silently", () => {
