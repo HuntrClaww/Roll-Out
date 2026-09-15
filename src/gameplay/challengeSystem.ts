@@ -154,13 +154,43 @@ export class ChallengeSystem {
     playerTeam: OpponentProfile[],
     enemyTeam: OpponentProfile[]
   ): { playerWins: number; enemyWins: number; winner: "player" | "enemy" } {
+    // This is the live gate for the "team-battle" rule (main.ts wires it
+    // directly into the win/loss decision for the Convergence Circuit
+    // finale) - it used to count, on each side independently, how many
+    // racers individually cleared a fixed (speed+control)/2 > 0.72 bar.
+    // That was a real bug, not just a style issue: the protagonist's own
+    // base stats average exactly 0.68 (see PLAYER_BATTLE_PROFILE in
+    // playerTeam.ts), which never clears 0.72 by itself. A player who
+    // hadn't recruited a specific strong-enough teammate would score 0
+    // no matter how the actual race went, and since a tie already
+    // resolves to "enemy" (see note below), that meant the final stage's
+    // team-battle check - and therefore the stage itself, since it's
+    // ANDed with real race completion in main.ts - was unwinnable
+    // regardless of racing skill. It also didn't compare the two teams
+    // relative to each other at all: a team that was collectively
+    // stronger than its rivals overall could still lose if none of its
+    // members individually happened to clear the same fixed bar.
+    //
+    // Fixed to compare total relative strength instead: whichever team's
+    // combined (speed+control)/2 score is higher wins. This keeps "team
+    // composition matters for team battles" intact (the stage's own
+    // description calls it "demonstrate team coordination"), but the
+    // comparison is now actually a comparison, not two independent
+    // absolute pass/fail checks.
+    const teamStrength = (team: OpponentProfile[]): number =>
+      team.reduce((total, racer) => total + (racer.speed + racer.control) / 2, 0);
+
+    // playerWins/enemyWins are kept in the return shape (existing callers
+    // and any external reporting may read them) as a per-racer "cleared
+    // a strong-racer bar" count - useful as a display stat - but they no
+    // longer decide the winner themselves.
     const playerWins = playerTeam.reduce((total, racer) => total + ((racer.speed + racer.control) / 2 > 0.72 ? 1 : 0), 0);
     const enemyWins = enemyTeam.reduce((total, racer) => total + ((racer.speed + racer.control) / 2 > 0.72 ? 1 : 0), 0);
 
-    // A tie must not be reported as a player victory. The current API has no
-    // draw state, so ties remain non-player wins until a proper tie-break rule
-    // is introduced.
-    const winner = playerWins > enemyWins ? "player" : "enemy";
+    // A tie must not be reported as a player victory (unchanged from
+    // before - an empty or identically-matched team should not
+    // automatically favor the player).
+    const winner = teamStrength(playerTeam) > teamStrength(enemyTeam) ? "player" : "enemy";
     return { playerWins, enemyWins, winner };
   }
 }
