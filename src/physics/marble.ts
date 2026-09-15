@@ -265,10 +265,17 @@ export class Marble {
     // below in this file — without it, a temperature far enough below a
     // surface's base temperature could drive tempFactor negative and
     // invert steering (steering left would push the marble right).
-    // Unreachable with today's game content (coldest configured
-    // temperature is -8°C on ice, base -10°C — nowhere close), but the
-    // formula itself should be safe for whatever temperature future
-    // stages introduce, the same way its sibling already is.
+    // This is not just theoretical: Volcanic Basin's "Obsidian Fields"
+    // region (track.ts) sets temperature 60 on the "obsidian" surface,
+    // whose base temperature is 150 (calibrated for the much hotter
+    // "Lava Flow Channels" region using the same material) — tempDelta
+    // -90, tempFactor 1 + 0.02*(-90) = -0.8 before this clamp. That
+    // region would have had inverted steering for the whole race without
+    // this fix. The clamp fixes the code-level safety; the region/
+    // material temperature mismatch that causes it is a separate
+    // content-tuning question, noted for Phase 19 balance review rather
+    // than changed here (moving either number is a game-feel call, not
+    // a correctness fix).
     const tempDelta = this.currentTemperature - surfaceData.temperature;
     const tempFactor = Math.max(0, 1 + (surfaceData.temperatureCoefficient * tempDelta));
     const adjustedFriction = surfaceData.friction * tempFactor * this.gripModifier;

@@ -254,8 +254,12 @@ describe("Marble physics", () => {
       // has the highest temperatureCoefficient (0.05) and a base
       // temperature of -10°C, so a large enough cold snap used to be able
       // to drive friction negative and invert steering — turning a left
-      // input into a rightward push. Not reachable with today's game
-      // content, but the formula itself must be safe regardless.
+      // input into a rightward push. This extreme case (-500°C) is
+      // synthetic, but a real, much milder version of the same bug was
+      // actually reachable in shipped content: Volcanic Basin's
+      // "Obsidian Fields" region (track.ts) combines with obsidian's
+      // base temperature to produce tempFactor -0.8 before this clamp
+      // (see the comment at the clamp site for the exact numbers).
       const marble = new Marble(new Vector3(0, 0, 0));
       marble.onGround = true;
       marble.velocity = new Vector3(0, 0, 1); // moving forward so `right` is well-defined
@@ -307,6 +311,32 @@ describe("Marble physics", () => {
         expect(marble.velocity.x).not.toBe(before);
       }
     });
+    test("regression: the actual Volcanic Basin 'Obsidian Fields' temperature/surface combo does not invert steering", () => {
+      // The real, shipped values from track.ts's VolcanicBasinTrack:
+      // region temperature 60 on surface "obsidian" (base temperature 150
+      // in constants.ts, calibrated for the much hotter "Lava Flow
+      // Channels" region that also uses obsidian's sibling
+      // "volcanic_rock"). tempDelta = 60 - 150 = -90, and obsidian's
+      // temperatureCoefficient is 0.02, so tempFactor = 1 + 0.02*(-90) =
+      // -0.8 before the clamp - genuinely negative, not synthetic. Before
+      // this fix, racing through this actual region would have steered
+      // backwards for the entire duration.
+      const marble = new Marble(new Vector3(0, 0, 0));
+      marble.onGround = true;
+      marble.velocity = new Vector3(0, 0, 1);
+      marble.currentSurface = "obsidian";
+      marble.currentTemperature = 60; // Obsidian Fields' actual region temperature
+
+      const velocityBefore = marble.velocity.clone();
+      marble.applySteeringForce(1, 1);
+
+      // Friction is clamped to zero here, so steering has no effect at
+      // all in this exact region/temperature combination (a separate,
+      // already-noted content-tuning question) - the key correctness
+      // property is that it does not go negative and invert.
+      expect(marble.velocity.x).toBeCloseTo(velocityBefore.x, 10);
+    });
+
   });
 
   describe("regression: the pre-fix uphill-launch bug cannot recur silently", () => {
