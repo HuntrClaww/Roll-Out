@@ -25,6 +25,22 @@ describe("flexible story timing", () => {
     expect(manager.getDiscoveredLore().map((entry) => entry.id)).toContain("lore.creator-traces");
   });
 
+  test("regression: lore.maintenance-label is actually discoverable now, not permanently unreachable", () => {
+    // lore.maintenance-label existed as fully-written content and as
+    // required mystery-thread evidence (mysteryConvergence.ts), but no
+    // STORY_EVENT referenced it - discoveredLoreIds is only ever
+    // populated through an event's loreEntryIds, so it could never
+    // actually be discovered by a player before this fix.
+    const manager = new StoryManager();
+    expect(manager.getAvailableEvents().map((event) => event.id)).not.toContain("event.maintenance-sign-discovery");
+    manager.advanceTime(40);
+    const event = manager.getAvailableEvents().find((candidate) => candidate.id === "event.maintenance-sign-discovery");
+    expect(event).toBeDefined();
+    const lore = manager.completeEvent(event!.id);
+    expect(lore.map((entry) => entry.id)).toContain("lore.maintenance-label");
+    expect(manager.getDiscoveredLore().map((entry) => entry.id)).toContain("lore.maintenance-label");
+  });
+
   test("keeps optional events available after their preferred presentation window", () => {
     const manager = new StoryManager();
     manager.advanceTime(240);

@@ -135,6 +135,25 @@ export const STORY_EVENTS: StoryEvent[] = [
     optional: true,
   },
   {
+    // lore.maintenance-label existed as fully-written content (and is
+    // listed as evidence for two mystery threads in mysteryConvergence.ts)
+    // but had no STORY_EVENT referencing it anywhere - discoveredLoreIds
+    // is only ever populated through completeEvent()'s loreEntryIds
+    // lookup, so this entry could never actually be discovered by a
+    // player no matter what they did. It didn't block mystery
+    // progression (both threads that use it have enough alternative
+    // evidence to clear their threshold without it), but the content
+    // itself was permanently unreachable, which the "optional lore must
+    // remain discoverable" principle above exists specifically to avoid.
+    id: "event.maintenance-sign-discovery",
+    kind: "discovery",
+    title: "A Helpful Old Sign",
+    description: "A badly painted direction sign near an unusual finish line uses a mark the player has seen somewhere before.",
+    loreEntryIds: ["lore.maintenance-label"],
+    timeWindow: { opensAtSeconds: 40, closesAtSeconds: 200, responseWindowSeconds: 12 },
+    optional: true,
+  },
+  {
     id: "event.rival-normalizes-anomaly",
     kind: "conversation",
     title: "The System Is the System",
