@@ -90,6 +90,10 @@ export const CHARACTER_VISUAL_PROFILES: CharacterVisualProfile[] = [
   visual("rival.ashen-foil", "sleek orb with a fencing-like fin", "#84433D", "#D9B47A", "polished heat enamel", "elegant deflections", "dramatic courtesy", "rival"),
   visual("knight.cogline", "orb with a protected gear collar", "#68716C", "#C6D09A", "maintained industrial casing", "mechanical straight lines", "dutiful focus", "support"),
   visual("knight.ice-thread", "thin orb with a luminous route thread", "#91C7D9", "#ECFFFF", "fine frost shell", "delicate exact glides", "quiet bravery", "support"),
+  visual("knight.ember", "compact orb with reforged heat plating", "#8A3324", "#FFC15C", "freshly rebuilt scorched shell", "impatient forward lunges", "brash readiness", "support"),
+  visual("knight.glacier", "faceted orb tracing a visible ice pattern", "#A7D8EC", "#FFFFFF", "pattern-etched frost shell", "exact pattern-following glides", "watchful discipline", "support"),
+  visual("knight.tide", "low orb ringed with dried salt bands", "#7C9A97", "#E9F0EC", "weathered salt-crust shell", "unhurried unpredictable drifts", "dry watchfulness", "support"),
+  visual("knight.rift", "rigid orb clutching a logged checklist tab", "#443A5E", "#C9B8FF", "meticulously labeled veil grain", "stiff correct-form turns", "anxious sincerity", "support"),
   visual("npc.morrow-mint", "orb with a small refreshment cart badge", "#78A486", "#F5D69A", "soft travel-worn satin", "comfortable rolling pauses", "unhurried warmth", "background"),
   visual("npc.pocket-storm", "tiny orb containing a cloud swirl", "#5A7899", "#D5E8FF", "charged glass casing", "restless jittering", "dramatic curiosity", "background"),
 ];

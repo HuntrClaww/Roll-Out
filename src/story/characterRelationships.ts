@@ -65,6 +65,16 @@ const ENCOUNTERS: CharacterEncounter[] = [
   { characterId: "npc.rail-bell", requiredRegionId: "mountain-pass", repeatable: true },
   { characterId: "knight.cogline", requiredStageId: "convergence-circuit", repeatable: true },
   { characterId: "knight.ice-thread", requiredRegionId: "frozen-cavern", repeatable: true },
+  // Gated like their boss (available up until that stage is cleared,
+  // matching the boss's own pre-battle-encounter window) since these are
+  // gate-guardian challenge scenes, not repeatable service chats.
+  { characterId: "knight.ember", requiredStageId: "ash-crest", repeatable: false },
+  { characterId: "knight.glacier", requiredStageId: "frost-veil", repeatable: false },
+  { characterId: "knight.rift", requiredStageId: "null-echo", repeatable: false },
+  // Salt Ward isn't one of the five gate factions, so Knight Tide isn't
+  // gated to any single stage/region - found independently, later, the
+  // same way the other "heavy loreWeight" discoveries are.
+  { characterId: "knight.tide", minimumWorldTimeSeconds: 150, repeatable: false },
   { characterId: "npc.morrow-mint", minimumWorldTimeSeconds: 60, repeatable: true },
   { characterId: "npc.pocket-storm", requiredStageId: "ash-crest", repeatable: true },
 ];

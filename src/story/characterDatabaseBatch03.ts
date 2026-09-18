@@ -56,6 +56,28 @@ export const CHARACTER_DATABASE_BATCH_03: CharacterRecord[] = [
     id: "knight.ice-thread", name: "Ice Thread", importance: "supporting", function: "knight", origin: "A Frost Reign marker patrol that repairs routes too thin for ordinary equipment.", faction: "Frost Reign", personality: ["calm", "brave", "quietly stubborn"], traits: ["uses fine route lines", "repairs fragile marks", "helps nervous trainees"], strengths: ["precision", "courage", "surface control"], weaknesses: ["underestimates exhaustion", "rarely asks for help"], storyUse: "Provides a grounded view of the Frost Reign’s dangerous maintenance work.", firstContact: "Offers a thin safe line and admits it is only safe if respected.", recurrence: "occasional", loreWeight: "moderate",
   },
   {
+    // These 4 gate-guardian knights already existed as opponent-tier combat
+    // profiles (knight_ember/knight_glacier/knight_tide/knight_rift in
+    // opponentTypes.ts, with matching dialogue already written in
+    // dialogueSystem.ts) but had no narrative-registry counterpart at all,
+    // so the encounter system (characterRelationships.ts, which resolves
+    // through getCharacterById here) could never surface them and their
+    // dialogue was unreachable. IDs here intentionally use this file's
+    // period-based convention rather than the opponent registry's
+    // underscore one, matching how every other boss/rival already has a
+    // separate narrative ID from its combat-stat ID.
+    id: "knight.ember", name: "Knight Ember", importance: "supporting", function: "knight", origin: "An Ash Banner gate-knight who rebuilds standard-issue gear after every failed drill.", faction: "Ash Banner", personality: ["brash", "loyal", "impatient with excuses"], traits: ["reforges damaged plating himself", "quotes Cinder Axis's rules from memory", "challenges before explaining why"], strengths: ["durability", "heat tolerance", "unwavering commitment"], weaknesses: ["dismisses gear he didn't personally rebuild", "takes shortcuts as a personal insult"], storyUse: "Shows what Cinder Axis's patient severity looks like filtered through a much less patient subordinate.", firstContact: "Demands to know why the player thinks standard gear isn't good enough for this gate.", recurrence: "recurring", loreWeight: "moderate",
+  },
+  {
+    id: "knight.glacier", name: "Knight Glacier", importance: "supporting", function: "knight", origin: "A Frost Reign gate-knight who reads ice patterns exactly as Glacier Sigil taught.", faction: "Frost Reign", personality: ["disciplined", "watchful", "unshowy"], traits: ["reads surface patterns before every shift", "stays upright through conditions that unbalance others", "corrects form without being asked"], strengths: ["balance", "pattern-reading", "cold endurance"], weaknesses: ["distrusts routes with no visible pattern", "slow to improvise off-pattern"], storyUse: "Demonstrates Glacier Sigil's methodology as a teachable, repeatable skill rather than a boss-only gift.", firstContact: "Points out the pattern in the ice before the player has noticed there is one.", recurrence: "recurring", loreWeight: "moderate",
+  },
+  {
+    id: "knight.tide", name: "Knight Tide", importance: "supporting", function: "knight", origin: "An unaffiliated gate-knight whose Salt Ward answers to none of the five gate factions.", faction: "Salt Ward", personality: ["private", "unbothered", "dryly watchful"], traits: ["keeps to routes the five gates don't claim", "declines to explain Salt Ward's purpose", "notices who's paying attention"], strengths: ["independence", "situational awareness", "unpredictability"], weaknesses: ["reflexive secrecy, even when it costs trust", "assumes disinterest where there's only ignorance"], storyUse: "A deliberate loose thread — the one gate-knight who doesn't slot neatly into the five-faction structure, kept that way on purpose.", firstContact: "Mentions, unprompted, that nobody important is watching this gate — and that this suits Salt Ward fine.", recurrence: "occasional", loreWeight: "heavy",
+  },
+  {
+    id: "knight.rift", name: "Knight Rift", importance: "supporting", function: "knight", origin: "A Null Veil gate-knight who insists on procedure in a faction built around instability.", faction: "Null Veil", personality: ["fussy", "sincere", "quietly anxious"], traits: ["logs every seam by the book", "insists there's a correct way through unstable terrain", "reacts badly when the terrain disagrees with his log"], strengths: ["procedural thoroughness", "route documentation", "genuine effort"], weaknesses: ["the terrain he's guarding doesn't respect procedure", "takes contradiction from the seam itself personally"], storyUse: "The comedy of Rift Echelon's chaos-as-philosophy, seen through a subordinate who never got the memo that the rules don't apply here.", firstContact: "Insists the player follow the approved line, then looks genuinely betrayed when the approved line moves.", recurrence: "recurring", loreWeight: "moderate",
+  },
+  {
     id: "npc.morrow-mint", name: "Morrow Mint", importance: "recurring", function: "friend", origin: "A travelling refreshment cart that follows racers between ordinary and strange routes.", personality: ["friendly", "observant", "unhurried"], traits: ["remembers orders", "hears quiet news", "offers calm after dangerous races"], strengths: ["hospitality", "social memory", "emotional steadiness"], weaknesses: ["avoids bad news", "sometimes waits too long to intervene"], storyUse: "Adds a dependable emotional rest point where the player can hear small truths without an exposition dump.", firstContact: "Offers a drink and asks whether the finish line was meant to be there.", recurrence: "recurring", loreWeight: "light",
   },
   {

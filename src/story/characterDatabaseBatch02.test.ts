@@ -5,8 +5,8 @@ describe("character database batch 02", () => {
   test("adds twenty distinct characters without changing batch 01", () => {
     expect(CHARACTER_DATABASE_BATCH_01).toHaveLength(20);
     expect(CHARACTER_DATABASE_BATCH_02).toHaveLength(20);
-    expect(CHARACTER_DATABASE_ALL).toHaveLength(60);
-    expect(new Set(CHARACTER_DATABASE_ALL.map((character) => character.id)).size).toBe(60);
+    expect(CHARACTER_DATABASE_ALL).toHaveLength(64);
+    expect(new Set(CHARACTER_DATABASE_ALL.map((character) => character.id)).size).toBe(64);
   });
 
   test("makes batch 02 queryable by the same roster API", () => {

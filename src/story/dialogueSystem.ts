@@ -224,7 +224,14 @@ export const DIALOGUE_SCENES: DialogueScene[] = [
     ],
   },
   {
-    characterId: "knight_ember",
+    // Fixed from "knight_ember" (the opponentTypes.ts combat-stat ID) to
+    // "knight.ember" (the narrative-registry ID added to
+    // characterDatabaseBatch03.ts). The encounter system resolves
+    // characterId through getCharacterById, which only knows the
+    // period-based convention every other boss/rival/knight already
+    // uses - the underscore ID never matched anything, so this dialogue
+    // was unreachable in the live game no matter what the player did.
+    characterId: "knight.ember",
     title: "Knight Ember blocks the heat gate",
     lines: [
       "Knight Ember: Cinder Axis sent standard gear and a standard warning. I plan to ignore the second part.",
@@ -233,7 +240,7 @@ export const DIALOGUE_SCENES: DialogueScene[] = [
     ],
   },
   {
-    characterId: "knight_glacier",
+    characterId: "knight.glacier",
     title: "Knight Glacier holds the marked line",
     lines: [
       "Knight Glacier: I follow the pattern Glacier Sigil reads. I do not claim to read it myself.",
@@ -242,7 +249,7 @@ export const DIALOGUE_SCENES: DialogueScene[] = [
     ],
   },
   {
-    characterId: "knight_tide",
+    characterId: "knight.tide",
     title: "Knight Tide guards the ward line",
     lines: [
       "Knight Tide: Salt Ward keeps to itself. We are not part of the five gates, and we prefer it that way.",
@@ -251,12 +258,36 @@ export const DIALOGUE_SCENES: DialogueScene[] = [
     ],
   },
   {
-    characterId: "knight_rift",
+    characterId: "knight.rift",
     title: "Knight Rift insists on proper technique",
     lines: [
       "Knight Rift: Rift Echelon does this the reckless way. I do this the CORRECT way. There is a difference.",
       "Knight Rift: Approved conditions. Controlled seams. A logged report afterward. That's all I ask.",
       "Knight Rift: ...why is the seam doing that. That is not an approved condition. Hold on—",
+    ],
+  },
+  {
+    // knight.cogline and knight.ice-thread already had working encounter
+    // hooks (characterRelationships.ts) but no dialogue scene at all -
+    // the same class of gap previously found and fixed for Tally Nine
+    // and Mirror Mara. Their encounter would trigger and immediately
+    // fall back to a bare "Encounter found: [name]" notice with no
+    // actual dialogue, since getDialogueScene had nothing to return.
+    characterId: "knight.cogline",
+    title: "Cogline waits for the machine to decide",
+    lines: [
+      "Cogline: Wait. The routing gear hasn't decided which way is forward yet.",
+      "Cogline: It did this yesterday too. I updated the manual. The gear did not read the update.",
+      "Cogline: There. Forward again. You may proceed - carefully, in case it changes its mind.",
+    ],
+  },
+  {
+    characterId: "knight.ice-thread",
+    title: "Ice Thread offers a thin safe line",
+    lines: [
+      "Ice Thread: This line is safe. I tested it myself, which is the only kind of testing I trust.",
+      "Ice Thread: Safe if respected. Not safe if you decide halfway through that you know better.",
+      "Ice Thread: Go. I'll be here repairing the next thin place before someone finds it the hard way.",
     ],
   },
   {

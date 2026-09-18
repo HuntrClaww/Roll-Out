@@ -2,8 +2,8 @@ import { CHARACTER_VISUAL_PROFILES, NPC_SERVICES, getCharacterVisualProfile, get
 
 describe("character presentation and services", () => {
   test("gives every Batch 01 character a readable visual identity", () => {
-    expect(CHARACTER_VISUAL_PROFILES).toHaveLength(60);
-    expect(new Set(CHARACTER_VISUAL_PROFILES.map((profile) => profile.characterId)).size).toBe(60);
+    expect(CHARACTER_VISUAL_PROFILES).toHaveLength(64);
+    expect(new Set(CHARACTER_VISUAL_PROFILES.map((profile) => profile.characterId)).size).toBe(64);
     for (const profile of CHARACTER_VISUAL_PROFILES) {
       expect(profile.primaryColor).toMatch(/^#[0-9A-F]{6}$/i);
       expect(profile.accentColor).toMatch(/^#[0-9A-F]{6}$/i);

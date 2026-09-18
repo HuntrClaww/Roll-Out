@@ -1,11 +1,11 @@
 import { runContentBalanceAudit } from "./contentBalanceAudit";
 
-describe("60-character content balance audit", () => {
+describe("64-character content balance audit", () => {
   test("keeps the roster unique and visually covered", () => {
     const report = runContentBalanceAudit();
-    expect(report.rosterCount).toBe(60);
-    expect(report.uniqueCharacterCount).toBe(60);
-    expect(report.visualCoverageCount).toBe(60);
+    expect(report.rosterCount).toBe(64);
+    expect(report.uniqueCharacterCount).toBe(64);
+    expect(report.visualCoverageCount).toBe(64);
     expect(report.charactersWithoutVisualIdentity).toHaveLength(0);
   });
 

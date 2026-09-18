@@ -50,10 +50,28 @@ describe("dialogue system", () => {
   });
 
   test("all four knights — an elite tier with full stat profiles — have a dialogue scene", () => {
-    for (const knightId of ["knight_ember", "knight_glacier", "knight_tide", "knight_rift"]) {
+    // IDs fixed from the opponentTypes.ts combat-stat convention
+    // (knight_ember, underscore) to the narrative-registry convention
+    // (knight.ember, period) that characterRelationships.ts's encounter
+    // system actually resolves through. The old IDs matched nothing in
+    // the narrative registry at all, so this dialogue - despite existing
+    // and despite this very test passing - was completely unreachable in
+    // the live game; getDialogueScene was only ever exercised directly
+    // here, never through the actual encounter flow. See
+    // characterRelationships.test.ts for the reachability-through-
+    // encounters regression coverage.
+    for (const knightId of ["knight.ember", "knight.glacier", "knight.tide", "knight.rift"]) {
       const scene = getDialogueScene(knightId);
       expect(scene).toBeDefined();
       expect(scene!.lines.length).toBe(3);
+    }
+  });
+
+  test("knight.cogline and knight.ice-thread — encounter-reachable knights that previously had zero dialogue — now have a scene", () => {
+    for (const knightId of ["knight.cogline", "knight.ice-thread"]) {
+      const scene = getDialogueScene(knightId);
+      expect(scene).toBeDefined();
+      expect(scene!.lines.length).toBeGreaterThan(0);
     }
   });
 });
