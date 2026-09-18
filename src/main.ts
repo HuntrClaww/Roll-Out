@@ -52,6 +52,15 @@ class Game {
   private showDebugUI: boolean = true;
   private readonly starterObstacle: TrackObstacle = createStarterObstacle();
   private gripUpgradeEnabled: boolean = false;
+  // frost-balance is a second, independently purchasable grip-modifying
+  // upgrade (upgradeEconomy.ts) that had a complete recipe, cost, and
+  // gripModifier but no input path anywhere in the game - a player could
+  // spend real crafting materials on it and it would never do anything.
+  // Mutually exclusive with reinforced-grip (both represent a physical
+  // body insert occupying the same slot; Marble.setGripModifier is a
+  // plain overwrite, not a stack, so only one can be meaningfully active
+  // at a time regardless).
+  private frostBalanceEnabled: boolean = false;
   private raceFinished: boolean = false;
   private raceResult: "player" | "opponent" | null = null;
   private checkpointIndex: number = 0;
@@ -170,6 +179,21 @@ class Game {
         } else {
           this.gripUpgradeEnabled = !this.gripUpgradeEnabled;
           if (this.gripUpgradeEnabled) {
+            this.frostBalanceEnabled = false;
+            applyOrbUpgrade(this.marble, installedUpgrade);
+          } else {
+            this.marble.setGripModifier(1);
+          }
+        }
+      }
+      if (e.key.toLowerCase() === "f") {
+        const installedUpgrade = this.upgradeInventory.getInstalledUpgrade("frost-balance");
+        if (!installedUpgrade) {
+          this.storyNotice = "No Frost Balance upgrade installed. Press I to craft it.";
+        } else {
+          this.frostBalanceEnabled = !this.frostBalanceEnabled;
+          if (this.frostBalanceEnabled) {
+            this.gripUpgradeEnabled = false;
             applyOrbUpgrade(this.marble, installedUpgrade);
           } else {
             this.marble.setGripModifier(1);
@@ -181,9 +205,21 @@ class Game {
           const installedUpgrade = this.upgradeInventory.getInstalledUpgrade("reinforced-grip");
           if (installedUpgrade) applyOrbUpgrade(this.marble, installedUpgrade);
           this.gripUpgradeEnabled = true;
+          this.frostBalanceEnabled = false;
           this.storyNotice = `Crafted Reinforced Grip level ${this.upgradeInventory.getUpgradeLevel("reinforced-grip")}.`;
         } else {
           this.storyNotice = "Reinforced Grip cannot be crafted: insufficient materials or maximum level reached.";
+        }
+      }
+      if (e.key.toLowerCase() === "i") {
+        if (this.upgradeInventory.purchase("frost-balance")) {
+          const installedUpgrade = this.upgradeInventory.getInstalledUpgrade("frost-balance");
+          if (installedUpgrade) applyOrbUpgrade(this.marble, installedUpgrade);
+          this.frostBalanceEnabled = true;
+          this.gripUpgradeEnabled = false;
+          this.storyNotice = `Crafted Frost Balance level ${this.upgradeInventory.getUpgradeLevel("frost-balance")}.`;
+        } else {
+          this.storyNotice = "Frost Balance cannot be crafted: insufficient materials or maximum level reached.";
         }
       }
       if (e.key.toLowerCase() === "p") {
@@ -543,9 +579,9 @@ class Game {
     this.ctx.fillText(`Track: ${this.track.name}`, 10, 30);
     this.ctx.fillText(`Speed: ${this.marble.getSpeed().toFixed(2)} m/s`, 10, 50);
     this.ctx.fillText(`Surface: ${playerEnv.surface} | Temp: ${playerEnv.temperature}°C`, 10, 70);
-    this.ctx.fillText(`Grip upgrade: ${this.gripUpgradeEnabled ? "Reinforced" : "Standard"} [G]`, 10, 90);
+    this.ctx.fillText(`Grip upgrade: ${this.gripUpgradeEnabled ? "Reinforced" : this.frostBalanceEnabled ? "Frost Balance" : "Standard"} [G/F]`, 10, 90);
     this.ctx.fillText(`Racing style: ${racingStyle.name} [T]`, 10, 100);
-    this.ctx.fillText(`Materials: fiber ${this.upgradeInventory.getMaterialCount("grip-fiber")} | glass ${this.upgradeInventory.getMaterialCount("volcanic-glass")} | resin ${this.upgradeInventory.getMaterialCount("frost-resin")} [U] Craft`, 10, 120);
+    this.ctx.fillText(`Materials: fiber ${this.upgradeInventory.getMaterialCount("grip-fiber")} | glass ${this.upgradeInventory.getMaterialCount("volcanic-glass")} | resin ${this.upgradeInventory.getMaterialCount("frost-resin")} [U] Craft Grip [I] Craft Frost`, 10, 120);
     this.ctx.fillText(`Elevation: ${playerEnv.elevation.toFixed(1)}m | Air density: ${this.marble.getAirDensityAtAltitude(playerEnv.elevation).toFixed(3)}`, 10, 140);
     this.ctx.fillText(`Checkpoints: ${this.checkpointIndex}/${this.checkpoints.length} [R] Restart`, 10, 160);
     this.ctx.fillText(`Stage ${this.progression.currentStageIndex + 1}: ${this.activeStage.name} | Unlocked: ${this.progression.unlockedStageIndex + 1}`, 10, 180);
@@ -568,7 +604,7 @@ class Game {
        this.ctx.fillText(`Spin: ${this.marble.getSpin().toFixed(2)} rad/s`, 10, 420);
        this.ctx.fillText(`Wind: ${playerEnv.windVector.length().toFixed(2)} m/s`, 10, 440);
        this.ctx.fillText(`Position Z: ${this.marble.position.z.toFixed(1)}m`, 10, 460);
-       this.ctx.fillText(`[D] Debug  [T] Style  [U] Craft  [P] Pip  [K] Quarry  [V] Vela  [N] Nix`, 10, 480);
+       this.ctx.fillText(`[D] Debug  [T] Style  [U] Craft Grip  [I] Craft Frost  [F] Toggle Frost  [P] Pip  [K] Quarry  [V] Vela  [N] Nix`, 10, 480);
     }
 
     this.ctx.fillText(`Race Time: ${this.raceTime.toFixed(1)}s`, 10, this.canvas.height - 20);
@@ -875,6 +911,7 @@ class Game {
     this.npcServiceManager.loadState(save.npcServices);
     this.racingStyleManager.loadState(save.racingStyle);
     this.gripUpgradeEnabled = false;
+    this.frostBalanceEnabled = false;
     this.marble.setGripModifier(1);
     this.loadCurrentStage();
     this.track = createTrack(this.activeStage.trackId);
