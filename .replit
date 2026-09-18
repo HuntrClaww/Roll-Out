@@ -1,0 +1,27 @@
+entrypoint = "src/main.ts"
+
+# Installs dependencies, then starts the webpack dev server. Runs on every
+# "Run" press; npm install is a no-op once node_modules already exists.
+run = "npm install && npm run dev"
+
+[nix]
+channel = "stable-24_05"
+packages = ["nodejs-20_x"]
+
+# Must match webpack.config.js's devServer.port. externalPort 80 is what
+# Replit's preview pane and public URL actually connect through.
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[unitTest]
+language = "nodejs"
+
+# This project has no backend - main.ts compiles to a static bundle
+# (dist/main.js + dist/index.html after `npm run build`, which includes
+# the postbuild step that copies index.html alongside it). Static is the
+# right deployment target: no server process needed, just the built files.
+[deployment]
+deploymentTarget = "static"
+build = ["npm", "run", "build"]
+publicDir = "dist"

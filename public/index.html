@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RollOut — Marble Racing Game (Phase 1)</title>
+    <title>Roll Out — Roll Into The Extreme Wonderland</title>
     <style>
       * {
         margin: 0;
@@ -62,7 +62,7 @@
         position: absolute;
         top: 10px;
         right: 10px;
-        background: rgba(255, 100, 100, 0.8);
+        background: rgba(80, 130, 220, 0.85);
         padding: 10px 15px;
         border-radius: 8px;
         font-weight: bold;
@@ -71,23 +71,50 @@
     </style>
   </head>
   <body>
-    <div id="phase-indicator">PHASE 1: Foundation</div>
+    <div id="phase-indicator">Browser Prototype</div>
 
     <div id="info-panel">
-      <div><strong>🎮 RollOut - Marble Racing</strong></div>
+      <div><strong>🎮 Roll Out — Roll Into The Extreme Wonderland</strong></div>
       <div style="font-size: 11px; color: #aaa; margin-top: 8px">
-        Phase 1 Physics Prototype
+        Physics-driven marble racing with bosses, story, and upgrades
       </div>
     </div>
 
     <div id="controls-panel">
-      <div><strong>Controls:</strong></div>
-      <div>
-        Use <span class="key">←</span> <span class="key">→</span> to steer
+      <div><strong>Racing:</strong>
+        <span class="key">←</span><span class="key">→</span> steer,
+        <span class="key">↑</span> thrust,
+        <span class="key">R</span> restart,
+        <span class="key">1</span><span class="key">2</span><span class="key">3</span> switch track
       </div>
-      <div>Or drag/tap on mobile to steer</div>
+      <div style="margin-top: 6px"><strong>Upgrades:</strong>
+        <span class="key">G</span>/<span class="key">U</span> Reinforced Grip (toggle/craft),
+        <span class="key">F</span>/<span class="key">I</span> Frost Balance (toggle/craft)
+      </div>
+      <div style="margin-top: 6px"><strong>NPC services:</strong>
+        <span class="key">P</span> Pip,
+        <span class="key">K</span> Quarry,
+        <span class="key">V</span> Vela,
+        <span class="key">N</span> Nix,
+        <span class="key">H</span> Sly-Mark,
+        <span class="key">J</span> Loop Clerk
+      </div>
+      <div style="margin-top: 6px"><strong>Team &amp; story:</strong>
+        <span class="key">Q</span>/<span class="key">E</span>/<span class="key">M</span> recruit,
+        <span class="key">[</span>/<span class="key">]</span> switch teammate,
+        <span class="key">C</span> talk to nearby character,
+        <span class="key">L</span> next lore,
+        <span class="key">B</span> boss biographies,
+        <span class="key">T</span> racing style
+      </div>
+      <div style="margin-top: 6px"><strong>Other:</strong>
+        <span class="key">D</span> debug info,
+        <span class="key">F6</span> save,
+        <span class="key">F7</span> load,
+        <span class="key">Enter</span>/<span class="key">Esc</span> during dialogue
+      </div>
       <div style="margin-top: 8px; color: #aaa">
-        Watch the red marble fall and respond to steering!
+        Or drag/tap to steer on mobile.
       </div>
     </div>
 
